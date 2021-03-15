@@ -1,0 +1,116 @@
+#!/bin/bash
+
+## Local updater
+## Alex Newman - 2021-03-15
+
+# std variables
+addcomm=""
+release_msg="release"
+# paths
+this_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+currdir=$(pwd)
+pythonbin=$(which python3)
+
+function updt_arg () {
+    if [ "$1" == "-p" ]; then
+        release_msg="pre-release"
+    elif [ "$1" == "-py" ]; then
+        addcomm="-py"
+    elif [ ! -z "$1" ]; then
+        echo -e "Not supported option $1."
+        echo -e "Try ./update_release --help for usage options"
+        exit 1
+    fi
+}
+
+function bye () {
+    cd "$currdir"
+    exit $1
+}
+
+if [ "$#" -lt 2 ] || [ "$#" -gt 4 ]; then
+    echo -e "Illegal number of parameters"
+    exit 1
+fi
+
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+    echo -e "Usage:"
+    echo -e "./update_release dir (major | minor | patch) [-p] [-py]"
+    echo -e "- First arg points the dir to operate over and is NOT-OPTIONAL"
+    echo -e "- Second arg indicates the release type and is NOT-OPTIONAL"
+    echo -e "- Third arg indicates if it is a pre-release and is OPTIONAL"
+    echo -e "- Fourth arg indicates if the script should operate over setup.py instead of setup.cfg and is OPTIONAL"
+    bye 0
+fi
+
+if [[ ! -d "$1" ]]; then
+    echo -e "The provided dir $1 does not exists or this script does not have permission"
+    bye 1
+fi
+
+# navigate to the specified directory
+cd "$1"
+
+if [ "$2" != "major" ] && [ "$2" != "minor" ] && [ "$2" != "patch" ]; then
+    echo -e "Not supported release type. Choose between 'major', 'minor' and 'patch'"
+    bye 1
+fi
+
+# update arguments
+updt_arg $3
+updt_arg $4
+
+# calculate new version number
+new_version=$(pythonbin "$this_path/update_release.py" $2 -y $addcomm)
+rtn=$?
+if [ $rtn -ne 0 ]; then
+    echo -e "New version failed"
+    bye 1
+fi
+echo -e "New version number will be v$new_version"
+
+# test if current branch is main
+cur_branch=$(git rev-parse --abbrev-ref HEAD)
+rtn=$?
+if [ $rtn -ne 0 ]; then
+    echo -e "Git branch revision failed"
+    bye 1
+elif [ "$cur_branch" != "main" ]; then
+    echo -e "The current branch is '$cur_branch'."
+    echo -e "Please switch and merge to 'main' to continue."
+    bye 1
+fi
+
+# commit modifications and push current branch
+echo -e "Setting up commit and push in branch '$cur_branch'"
+git add setup.py
+git commit -m "new $release_msg v$new_version"
+git push origin $cur_branch
+
+# add new release to github. Your github credentials may be asked
+hub release create $2 "v$new_version" -m "$release_msg-$2-v$new_version"
+rtn=$?
+if [ $rtn -ne 0 ]; then
+    echo -e "hub release control failed. Is it installed? Ignoring and continuing"
+else
+    echo -e "Release created (hub)"
+fi
+
+# build package before pushing it to pypi. Your PyPi credentials may be asked
+pythonbin setup.py sdist
+echo -e "Uploading to PyPi. Your PyPi credentials may be asked"
+twine upload --repository gcpinfra dist/*  # push to PyPi
+rtn=$?
+
+# clear the mess created in the cur dir
+rm -rf dist/
+rm -rf gcpinfra.egg-info
+
+if [ $rtn -ne 0 ]; then
+    echo -e "There was an error during the package upload to PyPi."
+    echo -e "Please check the console for more details."
+    bye 1
+else
+    echo -e "Process finished successfuly"
+    bye 0
+fi
