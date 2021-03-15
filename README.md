@@ -31,7 +31,7 @@ The second method is to download the source code from a release and unzip in a s
 While there is no explicit installation of this scripts, it is recommended to create a symbolic link to the actual bash script. This would make it easier to use in every day update and maintenance.
 
 ```bash
-sudo ln -s update_release /usr/local/bin/update_release
+sudo ln -s $(pwd)/update_release /usr/local/bin/update_release
 ```
 
 After that, you can use `update_release` as a regular native command.
