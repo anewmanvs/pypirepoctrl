@@ -88,7 +88,7 @@ git commit -m "new $release_msg v$new_version"
 git push origin $cur_branch
 
 # add new release to github. Your github credentials may be asked
-hub release create $2 "v$new_version" -m "$release_msg-$2-v$new_version"
+hub release create -m "$release_msg-$2-v$new_version" "v$new_version"
 rtn=$?
 if [ $rtn -ne 0 ]; then
     echo -e "hub release control failed. Is it installed? Ignoring and continuing"
