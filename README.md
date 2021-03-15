@@ -34,7 +34,11 @@ While there is no explicit installation of this scripts, it is recommended to cr
 sudo ln -s update_release /usr/local/bin/update_release
 ```
 
+After that, you can use `update_release` as a regular native command.
 
+### Auth
+
+You still have to provide credentials to push to GitHub and PyPi. The script merely asks for those credentials, it does not store anything on its own. Be careful when working with credentials, specially if it is a file.
 
 ## Usage
 
