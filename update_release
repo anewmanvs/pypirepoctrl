@@ -62,10 +62,11 @@ elif [[ -f "$1" ]]; then
     bye 1
 else
     regex='/?([^/]+)/?$'
-    if [[ "$1" =~ $regex ]]; then
+    passed_dir=$(readlink -f "$1")
+    if [[ "$passed_dir" =~ $regex ]]; then
         reponame="${BASH_REMATCH[1]}"
     else
-        echo -e "Could not guess the repo name from $1"
+        echo -e "Could not guess the repo name from $passed_dir"
         bye 1
     fi
 fi
