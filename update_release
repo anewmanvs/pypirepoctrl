@@ -4,18 +4,29 @@
 ## Alex Newman - 2021-03-15
 
 # std variables
+reponame=""
 addcomm=""
+setupfile="setup.cfg"
 release_msg="release"
-# paths
-this_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-currdir=$(pwd)
-pythonbin=$(which python3)
 
+# paths
+pythonbin=$(which python3)
+# find local dir (loop until the file is no longer a symlink)
+source="${BASH_SOURCE[0]}"
+while [ -h "$source" ]; do
+    this_path="$( cd -P "$( dirname "$source" )" >/dev/null 2>&1 && pwd )"
+    source="$(readlink "$source")"
+    [[ $source != /* ]] && $source="$this_path/$source"
+done
+this_path="$( cd -P "$( dirname "$source" )" >/dev/null 2>&1 && pwd )"
+
+# functions
 function updt_arg () {
     if [ "$1" == "-p" ]; then
         release_msg="pre-release"
     elif [ "$1" == "-py" ]; then
         addcomm="-py"
+        setupfile="setup.py"
     elif [ ! -z "$1" ]; then
         echo -e "Not supported option $1."
         echo -e "Try ./update_release --help for usage options"
@@ -24,10 +35,10 @@ function updt_arg () {
 }
 
 function bye () {
-    cd "$currdir"
     exit $1
 }
 
+# execution
 if [ "$#" -lt 2 ] || [ "$#" -gt 4 ]; then
     echo -e "Illegal number of parameters"
     exit 1
@@ -46,6 +57,17 @@ fi
 if [[ ! -d "$1" ]]; then
     echo -e "The provided dir $1 does not exists or this script does not have permission"
     bye 1
+elif [[ -f "$1" ]]; then
+    echo -e "It seems like $1 is a file instead of a directory"
+    bye 1
+else
+    regex='/?([^/]+)/?$'
+    if [[ "$1" =~ $regex ]]; then
+        reponame="${BASH_REMATCH[1]}"
+    else
+        echo -e "Could not guess the repo name from $1"
+        bye 1
+    fi
 fi
 
 # navigate to the specified directory
@@ -61,7 +83,7 @@ updt_arg $3
 updt_arg $4
 
 # calculate new version number
-new_version=$(pythonbin "$this_path/update_release.py" $2 -y $addcomm)
+new_version=$($pythonbin "$this_path/update_release.py" $2 -y $addcomm)
 rtn=$?
 if [ $rtn -ne 0 ]; then
     echo -e "New version failed"
@@ -83,7 +105,7 @@ fi
 
 # commit modifications and push current branch
 echo -e "Setting up commit and push in branch '$cur_branch'"
-git add setup.py
+git add "$setupfile"
 git commit -m "new $release_msg v$new_version"
 git push origin $cur_branch
 
@@ -97,14 +119,21 @@ else
 fi
 
 # build package before pushing it to pypi. Your PyPi credentials may be asked
-pythonbin setup.py sdist
+$pythonbin setup.py sdist bdist_wheel
 echo -e "Uploading to PyPi. Your PyPi credentials may be asked"
-twine upload --repository gcpinfra dist/*  # push to PyPi
+twine upload -r pypitest dist/*  # push to TestPyPi
 rtn=$?
 
-# clear the mess created in the cur dir
+# if previous upload to pypitest finished succefully, upload to pypi
+if [ $rtn -eq 0 ]; then
+    twine upload -r pypi dist/*  # push to PyPi
+    rtn=$?
+fi
+
+# clear the mess created here
 rm -rf dist/
-rm -rf gcpinfra.egg-info
+rm -rf "$reponame.egg-info"
+rm -rf build/
 
 if [ $rtn -ne 0 ]; then
     echo -e "There was an error during the package upload to PyPi."

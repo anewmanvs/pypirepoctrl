@@ -79,7 +79,7 @@ updtmask[:occurr] = [1] * occurr  # prepare mulmask
 nversion = '{}.{}.{}'.format(*[a*b for a, b in zip(lnversion, updtmask)])
 
 # writing new setup.py
-vsub = "version='{}'" if use_py else 'version={}'
+vsub = "version = '{}'" if use_py else 'version = {}'
 with open(setupfilename, 'w') as _f:
     _f.write(pttn.sub(vsub.format(nversion), content))
 
