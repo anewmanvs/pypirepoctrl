@@ -40,6 +40,31 @@ After that, you can use `update_release` as a regular native command.
 
 You still have to provide credentials to push to GitHub and PyPi. The script merely asks for those credentials, it does not store anything on its own. Be careful when working with credentials, specially if it is a file.
 
+Specifically when dealing with `hub`, you need to setup an access token to grant you authentication. Please read [this doc](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) and follow to steps to setup your token. On the first usage, the script will prompt you for your username and password. Instead, you should put the token into the password field.
+
+PyPi credentials must be stored to expedite package pushes. Be careful, you **must place the file with your credentials outside of the repository** for security matters. This script expects your credentials stored in `~/.pypirc`. If that's not the case, you should create with the following content:
+
+```
+[distutils]
+index-servers =
+    pypi
+    pypitest
+
+[pypi]
+repository=https://upload.pypi.org/legacy/
+username=__token__
+password=[your token]
+
+[pypitest]
+repository=https://test.pypi.org/legacy/
+username=__token__
+password=[your token]
+```
+
+Please note that you are not going to use your explicit username and password to authenticate with PyPi. You must create an API Token with permissions to the package you're trying to upload. Refer to [this link](https://pypi.org/help/#apitoken) to learn how tokens work and how to create them. **Note that `pypitest` is a completely different domain with different usernames and tokens**.
+
+Again, **do not post any of your credentials in a public repository**.
+
 ## Usage
 
 ```bash
