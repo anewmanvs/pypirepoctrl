@@ -63,11 +63,7 @@ if not skip_questions:
 with open(setupfilename, 'r') as _f:
     content = _f.read()
 
-if use_py:
-    pttn = compile(r'version\s*=\s*\'((?:[0-9]+\.?)+)\'')
-else:
-    pttn = compile(r'version\s*=\s*((?:[0-9]+\.?)+)')
-
+pttn = compile(r'version\s*=\s*\'?((?:[0-9]+\.?)+)\'?')
 version = pttn.findall(content)[0]
 
 # find new version
