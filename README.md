@@ -5,12 +5,10 @@ Helps control and maintain releases, pre-releases and PyPi packages.
 ## Requirements
 
 - `hub` - check: https://github.com/github/hub
-
 - `git` - check: https://git-scm.com/
-
 - `python3` - check: https://www.python.org/
-
 - `twine` - check: https://pypi.org/project/twine/
+- `openssl` - check: https://www.openssl.org/
 
 ## Compatibility
 This script is compatible with any Linux distribution with a bash script interpreter.
