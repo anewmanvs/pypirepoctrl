@@ -32,7 +32,7 @@ about:
   license: 
   license_family: 
   license_file: 
-  summary: {5}
+  summary: "{5}"
 
 extra:
   recipe-maintainers:
