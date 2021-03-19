@@ -5,6 +5,10 @@ Generates information for meta.yaml file
 import re
 import sys
 import subprocess
+from pathlib import Path
+
+source_path = Path(__file__).resolve()
+source_dir = source_path.parent
 
 params = sys.argv[1:]
 tam = len(params)
@@ -22,7 +26,7 @@ if pyoption in params[4:]:
     use_py = True
 
 setupfilename = 'setup.{}'.format('py' if use_py else 'cfg')
-metayamlfiletemp = 'meta.yaml.template'
+metayamlfiletemp = '{}/{}'.format(source_dir, 'meta.yaml.template')
 
 with open(metayamlfiletemp, 'r') as _f:
     metacontent = _f.read()
@@ -48,11 +52,11 @@ if not use_py:  # if it uses .cfg
     # gets sha256 hash from recently pushed pypi package
     res = subprocess.run(['openssl', 'sha256', tarball],
                          stdout=subprocess.PIPE)
-    _hash = re.findall(r'SHA256\(.+\)=\s+(.+)', res.stdout)[0]
+    _hash = re.findall(r'SHA256\(.+\)=\s+(.+)', res.stdout.decode('utf-8'))[0]
 
     # fills meta yaml template with actual data
     metacontent = metacontent.format(
-        metacontent, _hash, version, reponame, home, summary)
+        requirements, _hash, version, reponame, home, summary)
 
     with open(output, 'w') as _f:
         _f.write(metacontent)

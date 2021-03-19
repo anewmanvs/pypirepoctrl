@@ -1,27 +1,27 @@
-{% set name = "{3}" %}
-{% set version = "{2}" %}
+{{% set name = "{3}" %}}
+{{% set version = "{2}" %}}
 
 package:
-  name: "{{ name|lower }}"
-  version: "{{ version }}"
+  name: "{{{{ name|lower }}}}"
+  version: "{{{{ version }}}}"
 
 source:
-  - url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  - url: "https://pypi.io/packages/source/{{{{ name[0] }}}}/{{{{ name }}}}/{{{{ name }}}}-{{{{ version }}}}.tar.gz"
     sha256: {1}
 
 build:
   number: 0
-  script: "{{ PYTHON }} -m pip install . -vv"
+  script: "{{{{ PYTHON }}}} -m pip install . -vv"
   skip: True  # [win or osx]
 
 requirements:
   host:
     - pip
     - python
-    {0}
+{0}
   run:
     - python
-    {0}
+{0}
 
 test:
   imports:

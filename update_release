@@ -38,19 +38,31 @@ function bye () {
     exit $1
 }
 
-# execution
-if [ "$#" -lt 2 ] || [ "$#" -gt 4 ]; then
-    echo -e "Illegal number of parameters"
-    exit 1
-fi
+function rmdir_if_exists () {
+    if [[ -d "$1" ]]; then
+        rm -rf "$1"
+    fi
+}
 
-if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
-    echo -e "Usage:"
+function print_help () {
+    echo -e "\nUsage:"
     echo -e "./update_release dir (major | minor | patch) [-p] [-py]"
     echo -e "- First arg points the dir to operate over and is NOT-OPTIONAL"
     echo -e "- Second arg indicates the release type and is NOT-OPTIONAL"
     echo -e "- Third arg indicates if it is a pre-release and is OPTIONAL"
-    echo -e "- Fourth arg indicates if the script should operate over setup.py instead of setup.cfg and is OPTIONAL"
+    echo -e "- Fourth arg indicates if the script should operate over setup.py\
+ instead of setup.cfg and is OPTIONAL"
+}
+
+# execution
+if [ "$#" -lt 1 ] || [ "$#" -gt 4 ]; then
+    echo -e "Illegal number of parameters"
+    print_help
+    exit 1
+fi
+
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+    print_help
     bye 0
 fi
 
@@ -74,8 +86,14 @@ fi
 # navigate to the specified directory
 cd "$1"
 
+# if there are previous setup bdist_wheel and sdist dirs, delete them
+rmdir_if_exists dist/
+rmdir_if_exists "$reponame.egg-info"
+rmdir_if_exists build/
+
 if [ "$2" != "major" ] && [ "$2" != "minor" ] && [ "$2" != "patch" ]; then
     echo -e "Not supported release type. Choose between 'major', 'minor' and 'patch'"
+    print_help
     bye 1
 fi
 
@@ -131,10 +149,24 @@ if [ $rtn -eq 0 ]; then
     rtn=$?
 fi
 
+genmetafailed=0
+if [ $rtn -eq 0 ]; then
+    # upload to pypi was successful
+
+    # check if there is a conda dir and creates if not
+    if [[ ! -d "conda/$reponame" ]]; then
+        mkdir -p "conda/$reponame"
+    fi
+
+    $pythonbin "$this_path/genmeta.py" "$reponame" dist/*.tar.gz \
+               "$new_version" "conda/$reponame/meta.yaml" $addcomm
+    genmetafailed=$?
+fi
+
 # clear the mess created here
-rm -rf dist/
-rm -rf "$reponame.egg-info"
-rm -rf build/
+rmdir_if_exists dist/
+rmdir_if_exists "$reponame.egg-info"
+rmdir_if_exists build/
 
 if [ $rtn -ne 0 ]; then
     echo -e "There was an error during the package upload to PyPi."
@@ -142,5 +174,13 @@ if [ $rtn -ne 0 ]; then
     bye 1
 else
     echo -e "Process finished successfuly"
+    if [ $genmetafailed -eq 0 ]; then
+        echo -e "Please finish configuring meta.yaml file in conda/$reponame/"
+        echo -e "Follow instructions in https://conda-forge.org/docs/maintainer/\
+adding_pkgs.html and https://github.com/conda-forge/staged-recipes to upload it to\
+ conda-forge"
+    else
+        echo -e "Even though it was not possible to generate meta.yaml file."
+    fi
     bye 0
 fi
