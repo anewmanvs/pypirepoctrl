@@ -9,6 +9,8 @@ Helps control and maintain releases, pre-releases and PyPi packages.
 - `python3` - check: https://www.python.org/
 - `twine` - check: https://pypi.org/project/twine/
 - `openssl` - check: https://www.openssl.org/
+- `requests` - check: https://requests.readthedocs.io/en/master/
+- `grayskull` - check: https://github.com/conda-incubator/grayskull
 
 ## Compatibility
 This script is compatible with any Linux distribution with a bash script interpreter.
