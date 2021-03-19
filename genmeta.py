@@ -2,10 +2,15 @@
 Generates information for meta.yaml file
 """
 
+import os
 import re
 import sys
 import subprocess
+import traceback
+from time import sleep
 from pathlib import Path
+
+import requests
 
 source_path = Path(__file__).resolve()
 source_dir = source_path.parent
@@ -34,9 +39,42 @@ with open(metayamlfiletemp, 'r') as _f:
 with open(setupfilename, 'r') as _f:
     content = _f.read().lower()
 
+print('We should check if PyPi is ready with our newest version')
+max_retries = 3
+sleepinbetween = 20  # seconds
+url = 'https://pypi.org/project/{}/{}/'.format(
+    reponame.replace('_', '-'), version)
+tries = 0
+while True:
+    res = requests.get(url)
+
+    if res.status_code == 200:
+        break
+
+    tries += 1
+    if tries >= max_retries:
+        print("Couldn't find version in PyPi. URL: {}".format(url),
+              file=sys.stderr)
+        sys.exit(1)
+    print('Try #{} did not find suitable version'.format(tries))
+    sleep(sleepinbetween)
+
+# if managed to survive up until here then there is an updated version in PyPi
+# if grayskull is available, use it instead of our own solution here
+nograyskull = False
+res = subprocess.run(['grayskull', 'pypi', reponame], stdout=subprocess.PIPE)
+try:
+    res.check_returncode()
+    # move the generated file to output
+    os.replace('{}/meta.yaml'.format(reponame), output)
+except subprocess.CalledProcessError:
+    nograyskull = True
+    traceback.print_exc()
+    print('\nWe found error with grayskull. Trying different method')
+
 # reads requirements from setup.cfg to update the meta.yaml file
 # (even though it wont be used)
-if not use_py:  # if it uses .cfg
+if nograyskull and not use_py:  # if it uses .cfg
     pttn = re.compile(
         r'install_requires\s*=\s*((?:[0-9a-z\-_\s.]|[<>=]{2}|[><])+)\n')
     func = lambda x: '    - {}'.format(x.strip())

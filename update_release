@@ -153,13 +153,8 @@ genmetafailed=0
 if [ $rtn -eq 0 ]; then
     # upload to pypi was successful
 
-    # check if there is a conda dir and creates if not
-    if [[ ! -d "conda/$reponame" ]]; then
-        mkdir -p "conda/$reponame"
-    fi
-
     $pythonbin "$this_path/genmeta.py" "$reponame" dist/*.tar.gz \
-               "$new_version" "conda/$reponame/meta.yaml" $addcomm
+               "$new_version" "$reponame/new_meta.yaml" $addcomm
     genmetafailed=$?
 fi
 
