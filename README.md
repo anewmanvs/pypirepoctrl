@@ -69,7 +69,9 @@ Again, **do not post any of your credentials in a public repository**.
 ./update_release dir (major | minor | patch) [-p] [-py]
 ```
 
-First arg points the dir to operate over and is NOT-OPTIONAL. Second arg indicates the release type and is NOT-OPTIONAL. Third arg indicates if it is a pre-release and is OPTIONAL. Fourth arg is also OPTIONAL and if provided will work over `setup.py` instead of `setup.cfg`.	
+First arg points the dir to operate over and is NOT-OPTIONAL. Second arg indicates the release type and is NOT-OPTIONAL. Third arg indicates if it is a pre-release and is OPTIONAL. Fourth arg is also OPTIONAL and if provided will work over `setup.py` instead of `setup.cfg`.
+
+Please read the docs in [here](https://github.com/conda-forge/staged-recipes) and [here](https://conda-forge.org/docs/maintainer/adding_pkgs.html) to learn how to deal with `meta.yaml` file and upload do `conda-forge`. **Make sure to complete configuration of `meta.yaml` file before forking conda's `staged-recipes` repo**.
 
 ## What does it do?
 
