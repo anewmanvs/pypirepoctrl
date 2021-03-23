@@ -62,11 +62,22 @@ while True:
 # if managed to survive up until here then there is an updated version in PyPi
 # if grayskull is available, use it instead of our own solution here
 nograyskull = False
+pathout = '{}/meta.yaml'.format(reponame)
+pathold = pathout + '.old'
+thereisanoldone = False
+if os.path.isfile(pathout):  # check if output file of grayskull already exists
+    # is does, so move it to somewherelse
+    os.replace(pathout, pathold)
+    thereisanoldone = True
+
 res = subprocess.run(['grayskull', 'pypi', reponame], stdout=subprocess.PIPE)
 try:
     res.check_returncode()
     # move the generated file to output
-    os.replace('{}/meta.yaml'.format(reponame), output)
+    os.replace(pathout, output)
+    if thereisanoldone and pathold != pathout:
+        os.replace(pathold, pathout)
+        os.remove(pathout)
 except subprocess.CalledProcessError:
     nograyskull = True
     traceback.print_exc()

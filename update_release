@@ -139,6 +139,12 @@ fi
 
 # build package before pushing it to pypi. Your PyPi credentials may be asked
 $pythonbin setup.py sdist bdist_wheel
+rtn=$?
+if [ $rtn -ne 0 ]; then
+    echo -e "Failed to run sdist and bdist_wheel on setuptools"
+    bye 1
+fi
+
 echo -e "Uploading to PyPi. Your PyPi credentials may be asked"
 twine upload -r pypitest dist/*  # push to TestPyPi
 rtn=$?
