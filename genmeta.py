@@ -77,7 +77,6 @@ try:
     os.replace(pathout, output)
     if thereisanoldone and pathold != pathout:
         os.replace(pathold, pathout)
-        os.remove(pathout)
 except subprocess.CalledProcessError:
     nograyskull = True
     traceback.print_exc()
